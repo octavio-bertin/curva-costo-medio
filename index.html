@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Curvas de Costo Medio</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 40px; }
+    #sliderContainer { margin-top: 30px; }
+    label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Curvas de Costo Medio: Corto vs Largo Plazo</h2>
+  <div id="plot"></div>
+
+  <div id="sliderContainer">
+    <label for="kSlider">Capital fijo en el corto plazo (K₀): <span id="kVal">4</span></label><br>
+    <input type="range" min="1" max="50" value="4" step="0.1" id="kSlider">
+  </div>
+
+  <script>
+    // Parámetros fijos
+    const F = 10;
+    const w = 1, r = 1;
+    const qVals = Array.from({length: 200}, (_, i) => 0.5 + i * (7.5/199));
+
+    function acLargoPlazo(q) {
+      return (2 * q * q + F) / q;
+    }
+
+    function acCortoPlazo(q, K0) {
+      const L = Math.pow(q / Math.pow(K0, 0.25), 4);
+      return (w * L + r * K0 + F) / q;
+    }
+
+    function calcularCurvaCorto(K0) {
+      return qVals.map(q => acCortoPlazo(q, K0));
+    }
+
+    function graficar(K0) {
+      const acLP = qVals.map(acLargoPlazo);
+      const acCP = calcularCurvaCorto(K0);
+
+      const traceLP = {
+        x: qVals,
+        y: acLP,
+        mode: 'lines',
+        name: 'Largo plazo',
+        line: { width: 3, color: 'blue' }
+      };
+
+      const traceCP = {
+        x: qVals,
+        y: acCP,
+        mode: 'lines',
+        name: `Corto plazo (K₀ = ${K0})`,
+        line: { dash: 'dash', color: 'orange', width: 3 }
+      };
+
+      Plotly.newPlot('plot', [traceLP, traceCP], {
+        margin: { t: 30 },
+        xaxis: { title: 'Cantidad producida (q)' },
+        yaxis: { title: 'Costo medio', range: [0, 25] },
+        legend: { orientation: 'h' }
+      }, {responsive: true});
+    }
+
+    // Inicializar
+    const slider = document.getElementById('kSlider');
+    const kVal = document.getElementById('kVal');
+
+    slider.addEventListener('input', () => {
+      const K0 = parseFloat(slider.value);
+      kVal.textContent = K0;
+      graficar(K0);
+    });
+
+    // Primer gráfico
+    graficar(parseFloat(slider.value));
+  </script>
+</body>
+</html>
